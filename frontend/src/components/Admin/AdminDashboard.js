@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Navbar from '../common/Navbar';
 import {
   Container,
   Grid,
@@ -16,21 +17,21 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Box,
 } from '@mui/material';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import { admin } from '../../services/api';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [openCouponDialog, setOpenCouponDialog] = useState(false);
   const [openAssignDialog, setOpenAssignDialog] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
-  const [couponForm, setCouponForm] = useState({
-    description: '',
-    discountAmount: '',
-    expiryDate: new Date(),
+  const [couponData, setCouponData] = useState({
+    count: '',
+    expiryDate: '',
+    discountPercentage: '',
   });
   const [assignEmail, setAssignEmail] = useState('');
   const [error, setError] = useState('');
@@ -57,14 +58,19 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleGenerateCoupon = async () => {
+  const handleGenerateCoupons = async () => {
     try {
-      const response = await admin.generateCoupon(couponForm);
-      setSelectedCoupon(response.data);
+      // TODO: Implement bulk coupon generation
+      const response = await admin.generateCoupons({
+        count: parseInt(couponData.count),
+        expiryDate: new Date(couponData.expiryDate),
+        discountPercentage: parseInt(couponData.discountPercentage)
+      });
       setOpenCouponDialog(false);
-      setOpenAssignDialog(true);
+      // Refresh the coupons list
+      fetchUsers();
     } catch (err) {
-      setError('Failed to generate coupon');
+      setError('Failed to generate coupons');
     }
   };
 
@@ -80,131 +86,141 @@ const AdminDashboard = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              User Management
-            </Typography>
-            {error && (
-              <Typography color="error" sx={{ mb: 2 }}>
-                {error}
+    <>
+      <Navbar />
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Grid container spacing={3}>
+          {/* Quick Actions */}
+          <Grid item xs={12}>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h4" gutterBottom>
+                Admin Dashboard
               </Typography>
-            )}
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {user.approved ? 'Approved' : 'Pending'}
-                      </TableCell>
-                      <TableCell>
-                        {!user.approved && (
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            onClick={() => handleApproveUser(user.id)}
-                          >
-                            Approve
-                          </Button>
-                        )}
-                      </TableCell>
+              <Grid container spacing={2}>
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    startIcon={<LocalOfferIcon />}
+                    onClick={() => setOpenCouponDialog(true)}
+                  >
+                    Generate Coupons
+                  </Button>
+                </Grid>
+              </Grid>
+            </Box>
+          </Grid>
+
+          {/* User Management */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, borderRadius: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                User Management
+              </Typography>
+              {error && (
+                <Typography color="error" sx={{ mb: 2 }}>
+                  {error}
+                </Typography>
+              )}
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Email</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+                  </TableHead>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.email}>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.approved ? 'Approved' : 'Pending'}</TableCell>
+                        <TableCell>
+                          {!user.approved && (
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              size="small"
+                              startIcon={<PersonAddIcon />}
+                              onClick={() => handleApproveUser(user.id)}
+                            >
+                              Approve
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
 
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mt: 3 }}
-        onClick={() => setOpenCouponDialog(true)}
-      >
-        Generate New Coupon
-      </Button>
-
-      {/* Generate Coupon Dialog */}
-      <Dialog open={openCouponDialog} onClose={() => setOpenCouponDialog(false)}>
-        <DialogTitle>Generate New Coupon</DialogTitle>
-        <DialogContent>
-          <TextField
-            margin="dense"
-            label="Description"
-            fullWidth
-            value={couponForm.description}
-            onChange={(e) =>
-              setCouponForm({ ...couponForm, description: e.target.value })
-            }
-          />
-          <TextField
-            margin="dense"
-            label="Discount Amount"
-            type="number"
-            fullWidth
-            value={couponForm.discountAmount}
-            onChange={(e) =>
-              setCouponForm({ ...couponForm, discountAmount: e.target.value })
-            }
-          />
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DateTimePicker
-              label="Expiry Date"
-              value={couponForm.expiryDate}
-              onChange={(newValue) =>
-                setCouponForm({ ...couponForm, expiryDate: newValue })
-              }
-              renderInput={(params) => <TextField {...params} fullWidth />}
+        {/* Assign Coupon Dialog */}
+        <Dialog open={openAssignDialog} onClose={() => setOpenAssignDialog(false)}>
+          <DialogTitle>Assign Coupon</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Coupon Code: {selectedCoupon?.code}
+            </Typography>
+            <TextField
+              margin="dense"
+              label="User Email"
+              fullWidth
+              value={assignEmail}
+              onChange={(e) => setAssignEmail(e.target.value)}
             />
-          </LocalizationProvider>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenCouponDialog(false)}>Cancel</Button>
-          <Button onClick={handleGenerateCoupon} variant="contained">
-            Generate
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenAssignDialog(false)}>Cancel</Button>
+            <Button onClick={handleAssignCoupon} variant="contained">
+              Assign
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* Assign Coupon Dialog */}
-      <Dialog open={openAssignDialog} onClose={() => setOpenAssignDialog(false)}>
-        <DialogTitle>Assign Coupon</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Coupon Code: {selectedCoupon?.code}
-          </Typography>
-          <TextField
-            margin="dense"
-            label="User Email"
-            fullWidth
-            value={assignEmail}
-            onChange={(e) => setAssignEmail(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenAssignDialog(false)}>Cancel</Button>
-          <Button onClick={handleAssignCoupon} variant="contained">
-            Assign
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+        {/* Coupon Generation Dialog */}
+        <Dialog open={openCouponDialog} onClose={() => setOpenCouponDialog(false)}>
+          <DialogTitle>Generate Coupons</DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2 }}>
+              <TextField
+                fullWidth
+                label="Number of Coupons"
+                type="number"
+                value={couponData.count}
+                onChange={(e) => setCouponData({ ...couponData, count: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Expiry Date"
+                type="date"
+                value={couponData.expiryDate}
+                onChange={(e) => setCouponData({ ...couponData, expiryDate: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Discount Percentage"
+                type="number"
+                value={couponData.discountPercentage}
+                onChange={(e) => setCouponData({ ...couponData, discountPercentage: e.target.value })}
+                InputProps={{ inputProps: { min: 0, max: 100 } }}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenCouponDialog(false)}>Cancel</Button>
+            <Button onClick={handleGenerateCoupons} variant="contained" color="primary">
+              Generate
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </>
   );
 };
 

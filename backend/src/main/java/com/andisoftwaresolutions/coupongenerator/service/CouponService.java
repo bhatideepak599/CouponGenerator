@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -24,7 +25,7 @@ public class CouponService {
     private static final int COUPON_LENGTH = 10;
 
     @Transactional
-    public Coupon generateCoupon(String description, double discountAmount, LocalDateTime expiryDate) {
+    public Coupon generateCoupon(String description, double discountAmount, String expiryDate) {
         String code = generateUniqueCouponCode();
         
         Coupon coupon = Coupon.builder()
@@ -34,6 +35,7 @@ public class CouponService {
                 .expiryDate(expiryDate)
                 .status(CouponStatus.ACTIVE)
                 .build();
+
 
         return couponRepository.save(coupon);
     }
@@ -56,15 +58,21 @@ public class CouponService {
 
     @Transactional
     public void useCoupon(String couponCode, String userEmail) {
+        
         Coupon coupon = couponRepository.findByCode(couponCode)
                 .orElseThrow(() -> new RuntimeException("Coupon not found"));
 
         if (coupon.getStatus() != CouponStatus.ACTIVE) {
             throw new RuntimeException("Coupon is not active");
         }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
 
-        if (coupon.getExpiryDate().isBefore(LocalDateTime.now())) {
-            coupon.setStatus(CouponStatus.EXPIRED);
+        // Convert expiryDate and current time to String
+        String expiryDateString = coupon.getExpiryDate().format(String.valueOf(formatter));
+        String currentDateString = LocalDateTime.now().format(formatter);
+
+        // Compare as Strings
+        if (expiryDateString.compareTo(currentDateString) < 0) {
             throw new RuntimeException("Coupon has expired");
         }
 
@@ -73,7 +81,7 @@ public class CouponService {
         }
 
         coupon.setStatus(CouponStatus.USED);
-        coupon.setUsedAt(LocalDateTime.now());
+        coupon.setUsedAt(LocalDateTime.now().toString());
         couponRepository.save(coupon);
     }
 
@@ -82,17 +90,34 @@ public class CouponService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return couponRepository.findByUser(user);
     }
+    private static final String SPECIAL_CHARS = "!@#$%^&*";
 
     private String generateUniqueCouponCode() {
+
         SecureRandom random = new SecureRandom();
         StringBuilder code;
         do {
             code = new StringBuilder();
+            boolean hasSpecialChar = false;
+
             for (int i = 0; i < COUPON_LENGTH; i++) {
-                code.append(COUPON_CHARS.charAt(random.nextInt(COUPON_CHARS.length())));
+                char randomChar = COUPON_CHARS.charAt(random.nextInt(COUPON_CHARS.length()));
+                if (SPECIAL_CHARS.indexOf(randomChar) >= 0) {
+                    hasSpecialChar = true;
+                }
+                code.append(randomChar);
             }
+
+            // Ensure at least one special character
+            if (!hasSpecialChar) {
+                int randomIndex = random.nextInt(COUPON_LENGTH);
+                char specialChar = SPECIAL_CHARS.charAt(random.nextInt(SPECIAL_CHARS.length()));
+                code.setCharAt(randomIndex, specialChar);
+            }
+
         } while (couponRepository.existsByCode(code.toString()));
-        
+
         return code.toString();
     }
+
 }

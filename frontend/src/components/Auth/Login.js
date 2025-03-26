@@ -11,6 +11,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
+import Navbar from '../common/Navbar';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../services/api';
 
@@ -19,7 +20,7 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: 'USER',
+    role: 'ROLE_USER',
   });
   const [error, setError] = useState('');
 
@@ -52,7 +53,9 @@ const Login = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <>
+      <Navbar />
+      <Container component="main" maxWidth="xs">
       <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
         <Typography component="h1" variant="h5" align="center">
           Login
@@ -87,8 +90,8 @@ const Login = () => {
               value={formData.role}
               onChange={handleChange}
             >
-              <MenuItem value="USER">User</MenuItem>
-              <MenuItem value="ADMIN">Admin</MenuItem>
+              <MenuItem value="ROLE_USER">User</MenuItem>
+              <MenuItem value="ROLE_ADMIN">Admin</MenuItem>
             </Select>
           </FormControl>
           {error && (
@@ -112,8 +115,9 @@ const Login = () => {
             Don't have an account? Sign Up
           </Button>
         </Box>
-      </Paper>
-    </Container>
+        </Paper>
+      </Container>
+    </>
   );
 };
 

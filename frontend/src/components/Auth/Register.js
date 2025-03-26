@@ -6,9 +6,14 @@ import {
   Typography,
   Container,
   Paper,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../services/api';
+import Navbar from '../common/Navbar';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -17,6 +22,7 @@ const Register = () => {
     email: '',
     password: '',
     mobile: '',
+    role: 'ROLE_USER', // Default role
   });
   const [error, setError] = useState('');
 
@@ -38,8 +44,20 @@ const Register = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
+    <>
+      <Navbar />
+      <Container component="main" maxWidth="xs">
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 4, 
+            mt: 4,
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}
+        >
         <Typography component="h1" variant="h5" align="center">
           Register
         </Typography>
@@ -88,11 +106,26 @@ const Register = () => {
             value={formData.mobile}
             onChange={handleChange}
           />
+          
+          {/* Role Dropdown */}
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Role</InputLabel>
+            <Select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+            >
+              <MenuItem value="ROLE_USER">User</MenuItem>
+              <MenuItem value="ROLE_ADMIN">Admin</MenuItem>
+            </Select>
+          </FormControl>
+
           {error && (
             <Typography color="error" align="center" sx={{ mt: 2 }}>
               {error}
             </Typography>
           )}
+
           <Button
             type="submit"
             fullWidth
@@ -109,8 +142,9 @@ const Register = () => {
             Already have an account? Sign In
           </Button>
         </Box>
-      </Paper>
-    </Container>
+        </Paper>
+      </Container>
+    </>
   );
 };
 

@@ -4,6 +4,7 @@ import com.andisoftwaresolutions.coupongenerator.model.Coupon;
 import com.andisoftwaresolutions.coupongenerator.model.User;
 import com.andisoftwaresolutions.coupongenerator.repository.UserRepository;
 import com.andisoftwaresolutions.coupongenerator.service.CouponService;
+import com.andisoftwaresolutions.coupongenerator.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,21 +19,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final CouponService couponService;
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userRepository.findAll());
+        return ResponseEntity.ok(userService.findAllUsers());
     }
 
     @PutMapping("/users/{userId}/approve")
     public ResponseEntity<String> approveUser(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findById(userId);
         
         user.setApproved(true);
-        userRepository.save(user);
+        userService.approve(user);
         return ResponseEntity.ok("User approved successfully");
     }
 
@@ -40,7 +40,7 @@ public class AdminController {
     public ResponseEntity<Coupon> generateCoupon(
             @RequestParam String description,
             @RequestParam double discountAmount,
-            @RequestParam LocalDateTime expiryDate) {
+            @RequestParam String expiryDate) {
         return ResponseEntity.ok(couponService.generateCoupon(description, discountAmount, expiryDate));
     }
 

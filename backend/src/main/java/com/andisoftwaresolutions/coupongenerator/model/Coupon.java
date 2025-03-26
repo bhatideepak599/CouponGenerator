@@ -28,7 +28,7 @@ public class Coupon {
     private double discountAmount;
 
     @Column(nullable = false)
-    private LocalDateTime expiryDate;
+    private String expiryDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -39,13 +39,13 @@ public class Coupon {
     private CouponStatus status;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private String createdAt;
 
-    private LocalDateTime usedAt;
+    private String usedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now().toString();
         if (status == null) {
             status = CouponStatus.ACTIVE;
         }
