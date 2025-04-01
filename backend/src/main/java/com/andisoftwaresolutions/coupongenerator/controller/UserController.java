@@ -22,12 +22,14 @@ public class UserController {
         return ResponseEntity.ok(couponService.getUserCoupons(userEmail));
     }
 
-    @PostMapping("/coupons/{code}/use")
+    @PutMapping("/coupons/{id}/use")
     public ResponseEntity<String> useCoupon(
-            @PathVariable String code,
+            @PathVariable Long id,
             Authentication authentication) {
+
+        //System.out.println("===============================================================");
         String userEmail = authentication.getName();
-        couponService.useCoupon(code, userEmail);
+        couponService.useCoupon(id, userEmail);
         return ResponseEntity.ok("Coupon used successfully");
     }
 }

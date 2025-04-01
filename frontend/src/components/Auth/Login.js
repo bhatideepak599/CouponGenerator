@@ -89,6 +89,7 @@ const Login = () => {
               name="role"
               value={formData.role}
               onChange={handleChange}
+              sx={{ mt: 1 }}
             >
               <MenuItem value="ROLE_USER">User</MenuItem>
               <MenuItem value="ROLE_ADMIN">Admin</MenuItem>

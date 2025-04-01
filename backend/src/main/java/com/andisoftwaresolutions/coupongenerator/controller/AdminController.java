@@ -1,16 +1,14 @@
 package com.andisoftwaresolutions.coupongenerator.controller;
 
+import com.andisoftwaresolutions.coupongenerator.dto.CouponDto;
 import com.andisoftwaresolutions.coupongenerator.model.Coupon;
 import com.andisoftwaresolutions.coupongenerator.model.User;
-import com.andisoftwaresolutions.coupongenerator.repository.UserRepository;
 import com.andisoftwaresolutions.coupongenerator.service.CouponService;
 import com.andisoftwaresolutions.coupongenerator.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -40,8 +38,9 @@ public class AdminController {
     public ResponseEntity<Coupon> generateCoupon(
             @RequestParam String description,
             @RequestParam double discountAmount,
-            @RequestParam String expiryDate) {
-        return ResponseEntity.ok(couponService.generateCoupon(description, discountAmount, expiryDate));
+            @RequestParam String expiryDate,
+            @RequestParam int count) {
+        return ResponseEntity.ok(couponService.generateCoupon(description, discountAmount, expiryDate,count));
     }
 
     @PostMapping("/coupons/{couponId}/assign")
@@ -50,5 +49,16 @@ public class AdminController {
             @RequestParam String userEmail) {
         couponService.assignCouponToUser(couponId, userEmail);
         return ResponseEntity.ok("Coupon assigned successfully");
+    }
+
+    @GetMapping("/coupons/un-assigned")
+    public ResponseEntity<List<Coupon>> getUnassignedCoupons() {
+        List<Coupon> coupons=couponService.getUnassignedCoupons();
+        return ResponseEntity.ok(coupons);
+    }
+    @GetMapping("/coupons/assigned")
+    public ResponseEntity<List<CouponDto>> assignedCoupons() {
+        List<CouponDto> coupons=couponService.getassignedCoupons();
+        return ResponseEntity.ok(coupons);
     }
 }

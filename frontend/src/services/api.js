@@ -21,7 +21,7 @@ export const auth = {
 
 export const user = {
   getCoupons: () => api.get('/users/coupons'),
-  useCoupon: (code) => api.post(`/users/coupons/${code}/use`),
+  useCoupon: (code) => api.put(`/users/coupons/${code}/use`),
 };
 
 export const admin = {
@@ -30,6 +30,8 @@ export const admin = {
   generateCoupon: (couponData) => api.post('/admin/coupons', null, { params: couponData }),
   assignCoupon: (couponId, userEmail) => 
     api.post(`/admin/coupons/${couponId}/assign`, null, { params: { userEmail } }),
+  getNewCoupons:()=> api.get('admin/coupons/un-assigned'),
+  getAssignedCoupons:()=> api.get('admin/coupons/assigned')
 };
 
 export default api;

@@ -1,5 +1,6 @@
 package com.andisoftwaresolutions.coupongenerator.service;
 
+import com.andisoftwaresolutions.coupongenerator.dto.CouponDto;
 import com.andisoftwaresolutions.coupongenerator.model.Coupon;
 import com.andisoftwaresolutions.coupongenerator.model.CouponStatus;
 import com.andisoftwaresolutions.coupongenerator.repository.CouponRepository;
@@ -25,19 +26,23 @@ public class CouponService {
     private static final int COUPON_LENGTH = 10;
 
     @Transactional
-    public Coupon generateCoupon(String description, double discountAmount, String expiryDate) {
-        String code = generateUniqueCouponCode();
-        
-        Coupon coupon = Coupon.builder()
-                .code(code)
-                .description(description)
-                .discountAmount(discountAmount)
-                .expiryDate(expiryDate)
-                .status(CouponStatus.ACTIVE)
-                .build();
+    public Coupon generateCoupon(String description, double discountAmount, String expiryDate, int count) {
+        System.out.println(count+"========================================================");
+        for(int i=0;i<count;i++) {
+            String code = generateUniqueCouponCode();
+
+            Coupon coupon = Coupon.builder()
+                    .code(code)
+                    .description(description)
+                    .discountAmount(discountAmount)
+                    .expiryDate(expiryDate)
+                    .status(CouponStatus.ACTIVE)
+                    .build();
 
 
-        return couponRepository.save(coupon);
+             couponRepository.save(coupon);
+        }
+        return null;
     }
 
     @Transactional
@@ -57,9 +62,9 @@ public class CouponService {
     }
 
     @Transactional
-    public void useCoupon(String couponCode, String userEmail) {
-        
-        Coupon coupon = couponRepository.findByCode(couponCode)
+    public void useCoupon(Long id, String userEmail) {
+
+        Coupon coupon = couponRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Coupon not found"));
 
         if (coupon.getStatus() != CouponStatus.ACTIVE) {
@@ -120,4 +125,21 @@ public class CouponService {
         return code.toString();
     }
 
+    public List<Coupon> getUnassignedCoupons() {
+        List<Coupon>coupons=couponRepository.findAll();
+
+        return coupons.stream()
+                .filter(coupon->
+                    coupon.getUser()==null
+                )
+                .toList();
+    }
+
+    public List<CouponDto> getassignedCoupons() {
+        List<Coupon> coupons = couponRepository.findAll();
+        return coupons.stream()
+                .filter(coupon -> coupon.getUser() != null)
+                .map(CouponDto::new)
+                .toList();
+    }
 }

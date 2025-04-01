@@ -79,6 +79,7 @@ const PrivateRoute = ({ children, role }) => {
 function App() {
   return (
     <ThemeProvider theme={theme}>
+      
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />

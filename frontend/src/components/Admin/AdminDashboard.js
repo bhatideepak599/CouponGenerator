@@ -29,9 +29,10 @@ const AdminDashboard = () => {
   const [openAssignDialog, setOpenAssignDialog] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [couponData, setCouponData] = useState({
-    count: '',
+    description: '',
     expiryDate: '',
     discountPercentage: '',
+    count: '1',
   });
   const [assignEmail, setAssignEmail] = useState('');
   const [error, setError] = useState('');
@@ -61,10 +62,11 @@ const AdminDashboard = () => {
   const handleGenerateCoupons = async () => {
     try {
       // TODO: Implement bulk coupon generation
-      const response = await admin.generateCoupons({
-        count: parseInt(couponData.count),
+      const response = await admin.generateCoupon({
+        description: couponData.description,
         expiryDate: new Date(couponData.expiryDate),
-        discountPercentage: parseInt(couponData.discountPercentage)
+        discountAmount: parseInt(couponData.discountPercentage),
+        count: parseInt(couponData.count),
       });
       setOpenCouponDialog(false);
       // Refresh the coupons list
@@ -185,12 +187,20 @@ const AdminDashboard = () => {
           <DialogTitle>Generate Coupons</DialogTitle>
           <DialogContent>
             <Box sx={{ pt: 2 }}>
-              <TextField
+            <TextField
                 fullWidth
-                label="Number of Coupons"
+                label="Number of Coupons to be generated"
                 type="number"
                 value={couponData.count}
                 onChange={(e) => setCouponData({ ...couponData, count: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Coupon Description"
+                type="text"
+                value={couponData.description}
+                onChange={(e) => setCouponData({ ...couponData, description: e.target.value })}
                 sx={{ mb: 2 }}
               />
               <TextField
